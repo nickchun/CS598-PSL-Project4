@@ -1,0 +1,6 @@
+pandas
+numpy
+requests
+gunicorn
+dash
+dash_bootstrap_components
