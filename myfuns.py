@@ -36,30 +36,30 @@ def get_displayed_movies():
 def get_recommended_movies(new_user_ratings):
     return movies.head(10)
 
+# returns a list of most watched movies in a genre
+# input: genre (str)
+# output: list of movies
 def most_watched_movies(genre):
-    # returns a list of most watched movies in a genre
-    # input: genre (str)
-    # output: list of movies
     genre_filtered_data = merged_data[merged_data['genres'].str.contains(genre)]
     ratings_per_movie = genre_filtered_data.groupby('movie_id')['rating'].count().reset_index()
     ratings_per_movie.columns = ['movie_id', 'num_ratings']
     ratings_per_movie_with_titles = pd.merge(ratings_per_movie, movies[['movie_id', 'title']], on='movie_id')
     return ratings_per_movie_with_titles
 
+# returns a list of highly rated movies in a genre
+# input: genre (str)
+# output: list of movies
 def highly_rated_movies(genre):
-    # returns a list of highly rated movies in a genre
-    # input: genre (str)
-    # output: list of movies
     genre_filtered_data = merged_data[merged_data['genres'].str.contains(genre)]
     average_rating_per_movie = genre_filtered_data.groupby('movie_id')['rating'].mean().reset_index()
     average_rating_per_movie.columns = ['movie_id', 'avg_rating']
     average_rating_per_movie_with_titles = pd.merge(average_rating_per_movie, movies[['movie_id', 'title']], on='movie_id')
     return average_rating_per_movie_with_titles
 
+# return a list of movies that are ranked by most watched and highly rated
+# input: genre (str), number of movies (int)
+# output: list of movies
 def ranking(genre, n):
-    # return a list of movies that are ranked by most watched and highly rated
-    # input: genre (str), number of movies (int)
-    # output: list of movies
     popularity = most_watched_movies(genre)
     avg_rating = highly_rated_movies(genre)
     rank = pd.merge(popularity, avg_rating, on=['movie_id', 'title'])
