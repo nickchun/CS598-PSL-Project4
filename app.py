@@ -10,71 +10,97 @@ from dash.dependencies import ALL, State
 from myfuns import (genres, get_displayed_movies, get_popular_movies,
                     get_recommended_movies)
 
+CUSTOM_STYLE = {
+    "height": "100vh",
+    "display": "flex",
+    "flex-direction": "column",
+    "justify-content": "center"
+}
+
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP], 
                suppress_callback_exceptions=True)
 server = app.server
 
-# the style arguments for the sidebar. We use position:fixed and a fixed width
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "16rem",
-    "padding": "2rem 1rem",
-    "background-color": "#f8f9fa",
-}
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content')
+])
 
-# the styles for the main content position it to the right of the sidebar and
-# add some padding.
-CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
-    "padding": "2rem 1rem",
-}
+index_page = html.Div([
+    dbc.Container([
+        html.H1("Welcome to Movie Recommender", className="text-center mb-4"),
+        dbc.Row([
+            dbc.Col(dbc.Button("Genre-based Recommendation", href="/genre-based", className="btn btn-lg", style={"background-image": "linear-gradient(to right, #000000, #434343)"}, size="lg"), width=12, className="text-center"),
+            dbc.Col(dbc.Button("Rating-based Recommendation", href="/rating-based", className="btn btn-lg", style={"background-image": "linear-gradient(to right, #000000, #434343)"}, size="lg"), width=12, className="text-center"),
+        ], justify="center")
+    ], style=CUSTOM_STYLE)
+])
 
-sidebar = html.Div(
-    [
-        html.H3("Movie Recommender", className="display-8"),
-        html.Hr(),
-        dbc.Nav(
+def get_movie_card(movie, with_rating=False):
+    return html.Div(
+        dbc.Card(
             [
-                dbc.NavLink("System 1 - Genre", href="/", active="exact"),
-                dbc.NavLink("System 2 - Collaborative", href="/system-2", active="exact"),
-            ],
-            vertical=True,
-            pills=True,
+                dbc.CardImg(
+                    src=f"https://liangfgithub.github.io/MovieImages/{movie.movie_id}.jpg?raw=true",
+                    top=True,
+                ),
+                dbc.CardBody(
+                    [
+                        html.H6(movie.title, className="card-title text-center"),
+                    ]
+                ),
+            ]
+            + (
+                [
+                    dcc.RadioItems(
+                        options=[
+                            {"label": "1", "value": "1"},
+                            {"label": "2", "value": "2"},
+                            {"label": "3", "value": "3"},
+                            {"label": "4", "value": "4"},
+                            {"label": "5", "value": "5"},
+                        ],
+                        className="text-center",
+                        id={"type": "movie_rating", "movie_id": movie.movie_id},
+                        inputClassName="m-1",
+                        labelClassName="px-1",
+                    )
+                ]
+                if with_rating
+                else []
+            ),
+            className="h-100",
         ),
-    ],
-    style=SIDEBAR_STYLE,
-)
-
-
-content = html.Div(id="page-content", style=CONTENT_STYLE)
-
-app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
+        className="col mb-4",
+    )
+    
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
-
 def render_page_content(pathname):
-    if pathname == "/":
-        return html.Div(
-            [
-                html.H1("Select a genre"),
-                dcc.Dropdown(
-                    id="genre-dropdown",
-                    options=[{"label": k, "value": k} for k in genres],
-                    value=None,
-                    className="mb-4",
-                ),
-                html.Div(id="genre-output", className=""),
-            ]
-        )
-    elif pathname == "/system-2":
-        movies = get_displayed_movies()
-        return html.Div(
-            [
-                html.Div(
+    if pathname == '/genre-based':
+        return genre_based_page
+    elif pathname == '/rating-based':
+        return rating_based_page
+    else:
+        return index_page
+
+genre_based_page = html.Div(
+    [
+        html.H1("Select a genre"),
+        dcc.Dropdown(
+            id="genre-dropdown",
+            options=[{"label": k, "value": k} for k in genres],
+            value=None,
+            className="mb-4",
+        ),
+        html.Div(id="genre-output", className=""),
+    ]
+)
+
+movies = get_displayed_movies()
+
+rating_based_page = html.Div([
+    html.Div(
                     [
                         dbc.Row(
                             [
@@ -123,8 +149,9 @@ def render_page_content(pathname):
                     ],
                     type="circle",
                 ),
-            ]
-        )
+    ]
+)
+
 
 @app.callback(Output("genre-output", "children"), Input("genre-dropdown", "value"))
 def update_output(genre):
@@ -147,45 +174,6 @@ def update_output(genre):
             ),
         ]
 
-
-    
-def get_movie_card(movie, with_rating=False):
-    return html.Div(
-        dbc.Card(
-            [
-                dbc.CardImg(
-                    src=f"https://liangfgithub.github.io/MovieImages/{movie.movie_id}.jpg?raw=true",
-                    top=True,
-                ),
-                dbc.CardBody(
-                    [
-                        html.H6(movie.title, className="card-title text-center"),
-                    ]
-                ),
-            ]
-            + (
-                [
-                    dcc.RadioItems(
-                        options=[
-                            {"label": "1", "value": "1"},
-                            {"label": "2", "value": "2"},
-                            {"label": "3", "value": "3"},
-                            {"label": "4", "value": "4"},
-                            {"label": "5", "value": "5"},
-                        ],
-                        className="text-center",
-                        id={"type": "movie_rating", "movie_id": movie.movie_id},
-                        inputClassName="m-1",
-                        labelClassName="px-1",
-                    )
-                ]
-                if with_rating
-                else []
-            ),
-            className="h-100",
-        ),
-        className="col mb-4",
-    )
     
 @app.callback(
     Output("rate-movie-container", "style"),
