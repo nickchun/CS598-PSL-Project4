@@ -2,10 +2,10 @@
 
 ## Instructions
 
-### Install required packages
+1. Install required packages
 
 ```pip install -r requirements.txt```
 
-### Start local server
+2. Start local server
 
 ```gunicorn app:server```
