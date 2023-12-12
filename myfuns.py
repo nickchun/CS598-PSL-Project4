@@ -22,8 +22,11 @@ ratings = pd.DataFrame(ratings_data, columns=['user_id', 'movie_id', 'rating', '
 ratings['movie_id'] = ratings['movie_id'].astype(int)
 ratings['user_id'] = ratings['user_id'].astype(int)
 ratings['rating'] = ratings['rating'].astype(int)
-
 merged_data = pd.merge(movies, ratings, on='movie_id')
+
+genres = list(
+    sorted(set([genre for genres in movies.genres.unique() for genre in genres.split("|")]))
+)
 
 genre_recs = {}
 
