@@ -1,13 +1,21 @@
 import pandas as pd
 import requests
+import urllib.request, json
+import numpy as np
 
 # Define the URLs for movie data
 movies_url = "https://liangfgithub.github.io/MovieData/movies.dat?raw=true"
 ratings_url = "https://liangfgithub.github.io/MovieData/ratings.dat?raw=true"
+with urllib.request.urlopen('https://red-smartbit.s3.us-west-2.amazonaws.com/test.json') as url:
+    data = json.load(url)
 
 # Fetch the data from the URL
 movies_response = requests.get(movies_url)
 ratings_response = requests.get(ratings_url)
+
+aux_df = pd.DataFrame.from_dict(data)
+S = aux_df.values
+S = S.astype('float64')
 
 # Split the data into lines and then split each line using "::"
 movie_lines = movies_response.text.split('\n')
@@ -77,3 +85,19 @@ def get_popular_movies(genre: str):
         return genre_recs[genre]
     else:
         return ranking(genre, 10)
+
+def myIBCF(w):
+    nan_indices = np.argwhere(np.isnan(w)).flatten()
+    recommendations = {}
+    for l in nan_indices:
+        l_neighbors = np.argwhere(~np.isnan(S[l])).flatten()
+        w_top = w[l_neighbors]
+
+        mask = np.where(np.isnan(w_top), 0, 1)
+        fac_1 = 1 / np.nansum(S[l, l_neighbors] * mask.T)
+        fac_2 = np.nansum(S[l, l_neighbors] * w[l_neighbors])
+        val = fac_1 * fac_2
+        recommendations[int(l)] = val if not np.isnan(val) else 0
+    r_sorted = sorted(recommendations.items(), key=lambda x: x[1])[::-1]
+    return r_sorted[: 10]
+
