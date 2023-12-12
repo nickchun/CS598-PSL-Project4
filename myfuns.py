@@ -42,7 +42,13 @@ def get_displayed_movies():
     return movies.head(100)
 
 def get_recommended_movies(new_user_ratings):
-    return movies.head(10)
+    new_ratings = np.full((len(S)), np.nan)
+    for k, v in new_user_ratings.items():
+        index = movies[movies['movie_id'] == k].index[0]
+        new_ratings[index] = float(v)
+    recommended = myIBCF(new_ratings)
+    recommendations = [m_id for m_id, score in recommended]
+    return movies.iloc[recommendations]
 
 # returns a list of most watched movies in a genre
 # input: genre (str)
