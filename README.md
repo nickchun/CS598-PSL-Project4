@@ -4,8 +4,8 @@
 
 1. Install required packages
 
-```pip install -r requirements.txt```
+>```pip install -r requirements.txt```
 
 2. Start local server
 
-```gunicorn app:server```
+>```gunicorn app:server```
